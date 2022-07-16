@@ -1,5 +1,6 @@
 import os
 from tqdm import tqdm
+from distutils.dir_util import copy_tree
 
 import torch
 import torch.nn as nn
@@ -10,8 +11,8 @@ from transformers import AutoModelForMaskedLM, AutoTokenizer
 from accelerate import Accelerator
 from sklearn.metrics import f1_score
 
-from dataset import KlueDataset
-from special_tokens import SPECIAL_ENTITY_MARKERS, get_relation_labels
+from .dataset import KlueDataset
+from .special_tokens import SPECIAL_ENTITY_MARKERS, get_relation_labels
 
 
 class Trainer:
@@ -36,12 +37,7 @@ class Trainer:
         })
         
         # Save tokenizer
-        self.tokenizer.save_pretrained(
-            os.path.join(
-                self.args.model_path, 
-                f"{self.args.plm.replace('/', '_')}-tokenizer"
-            )
-        )
+        self.tokenizer.save_pretrained(self.args.model_path)
         
         # Load model and resize token embeddings
         self.model = AutoModelForMaskedLM.from_pretrained(args.plm)
@@ -99,19 +95,35 @@ class Trainer:
         self.device = self.accelerator.device
         
     def run(self):
+        max_score, max_score_epoch = 0, 0
         avg_train_loss, avg_valid_loss, avg_valid_score = 0.0, 0.0, 0.0
         
         for epoch in range(self.args.epochs):
             avg_train_loss = self.train(epoch)
             avg_valid_loss, avg_valid_score = self.valid(epoch)
             
+            if max_score < avg_valid_score:
+                max_score = avg_valid_score
+                max_score_epoch = epoch
+            
             # Save trained model
             self.model.save_pretrained(
                 os.path.join(
-                    self.args.model_path,
+                    self.args.cache_model_path,
                     f"e-{epoch}.plm-{self.args.plm.replace('/', '_')}.train-loss-{avg_train_loss:.4f}.valid-loss-{avg_valid_loss:.4f}.score-{avg_valid_score:.2f}"
                 )
             )
+        
+        max_score_model_dir = ""
+        for model_dir in os.listdir(self.args.cache_model_path):
+            if model_dir.startswith(f"e-{max_score_epoch}"):
+                max_score_model_dir = model_dir
+                
+        copy_tree(
+            os.path.join(self.args.cache_model_path, max_score_model_dir), 
+            os.path.join(self.args.model_path)
+        )
+        
         
     def train(self, epoch):
         self.model.train()

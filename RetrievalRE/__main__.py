@@ -5,11 +5,11 @@ import random
 import torch
 import numpy as np
 import argparse
-from trainer import Trainer
-from builder import Builder
-from evaluator import Evaluator
+from .trainer import Trainer
+from .builder import Builder
+from .evaluator import Evaluator
 
-from file_io import *
+from .file_io import *
 
 
 def fix_seed(random_seed=42):
@@ -35,22 +35,23 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser()
     
-    parser.add_argument("--run_mode", default="evaluate")
+    parser.add_argument("--run_mode", default="train")
     
     parser.add_argument("--plm", default="klue/roberta-base")
     parser.add_argument("--pretrained_model", default="/home/chnaaam/chnaaam/KnowPrompt/pretrained_model")
         
-    parser.add_argument("--data_path", default="/home/chnaaam/data/KLUE/klue_benchmark/klue-re-v1.1/")
+    parser.add_argument("--data_path", default="./data")
     parser.add_argument("--train_data_fn", default="klue-re-v1.1_train.json")
     parser.add_argument("--valid_data_fn", default="klue-re-v1.1_dev.json")
     
     parser.add_argument("--cache_path", default="./cache")
+    parser.add_argument("--cache_model_path", default="./cache")
     parser.add_argument("--model_path", default="./model")
     
     parser.add_argument("--use_gpu", default=True)
-    parser.add_argument("--use_fp16", default=False)
+    parser.add_argument("--use_fp16", default=True)
     parser.add_argument("--max_seq_length", default=256)
-    parser.add_argument("--epochs", default=5)
+    parser.add_argument("--epochs", default=2)
     parser.add_argument("--lr", default=3e-5)
     parser.add_argument("--batch_size", default=20)
     parser.add_argument("--train_num_workers", default=0)

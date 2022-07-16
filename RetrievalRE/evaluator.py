@@ -6,9 +6,9 @@ from torch.utils.data import DataLoader
 from transformers import AutoModelForMaskedLM, AutoTokenizer
 from sklearn.metrics import f1_score
 
-from dataset import KlueDataset
-from open_book_data_store import OpenBookDataStore
-from special_tokens import SPECIAL_ENTITY_MARKERS, get_relation_labels
+from .dataset import KlueDataset
+from .open_book_data_store import OpenBookDataStore
+from .special_tokens import SPECIAL_ENTITY_MARKERS, get_relation_labels
 
 
 class Evaluator:
@@ -30,10 +30,10 @@ class Evaluator:
         self.relation_label_map = {r: l for r, l in zip(relations, relation_labels)}
              
         # Load tokenizer and add special tokens
-        self.tokenizer = AutoTokenizer.from_pretrained(args.pretrained_model)
+        self.tokenizer = AutoTokenizer.from_pretrained(args.model_path)
                 
         # Load model and resize token embeddings
-        self.model = AutoModelForMaskedLM.from_pretrained(args.pretrained_model)
+        self.model = AutoModelForMaskedLM.from_pretrained(args.model_path)
         self.model = self.model.to(self.device)
         
         # Load open book data store
